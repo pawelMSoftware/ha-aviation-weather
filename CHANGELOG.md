@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `binary_sensor.<fir>_sigmet` (and the optional SIGMET detail sensors)
+  now flip state exactly when a SIGMET's validity window ends, instead
+  of staying stuck at the last polled value until the next scheduled
+  refresh (up to the full poll interval later). Uses
+  `async_track_point_in_utc_time` to wake up entities at the nearest
+  upcoming expiry — no extra API calls, no shortened poll interval.
+- A single malformed SIGMET record from the API (e.g. an unparseable or
+  missing validity timestamp) no longer discards the entire batch for a
+  FIR. It's now logged as a warning and skipped, while every other
+  valid SIGMET in the same response is still processed normally.
+
 ## [1.0.0] - 2026-07-06
 
 First release.

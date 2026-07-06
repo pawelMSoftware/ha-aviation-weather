@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import datetime
 
 from .models import Sigmet
+
+LOGGER = logging.getLogger(__name__)
 
 # Raw API fields consumed explicitly by _map_one. Anything else present
 # on a raw item is preserved verbatim in Sigmet.extra rather than
@@ -40,8 +43,29 @@ class SigmetMapper:
 
         The API is not known to reliably filter by FIR itself, so
         filtering by `firId` happens here, client-side.
+
+        A single malformed record (missing/unparseable validity
+        timestamps, or an item that isn't even a well-formed dict) is
+        logged and skipped rather than failing the whole batch — one
+        bad record from an otherwise-healthy API response shouldn't
+        discard every other, valid SIGMET for this FIR.
         """
-        return [self._map_one(item) for item in raw_list if item.get("firId") == fir_id]
+        mapped: list[Sigmet] = []
+
+        for item in raw_list:
+            try:
+                if item.get("firId") != fir_id:
+                    continue
+                mapped.append(self._map_one(item))
+            except (ValueError, TypeError, AttributeError) as ex:
+                LOGGER.warning(
+                    "Skipping malformed SIGMET record for FIR %s (rawSigmet=%r): %s",
+                    fir_id,
+                    item.get("rawSigmet") if isinstance(item, dict) else item,
+                    ex,
+                )
+
+        return mapped
 
     def _map_one(
         self,
