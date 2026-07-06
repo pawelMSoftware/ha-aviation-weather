@@ -105,23 +105,58 @@ class TestExpiredSigmet:
         assert result[0].valid_to == datetime(2020, 1, 1, 4, 0, tzinfo=UTC)
 
 
-class TestMissingRequiredValidityTimestamp:
-    """valid_from/valid_to are required — a SIGMET can't be evaluated
-    for "is this active" without them."""
+class TestMalformedRecordIsSkippedNotFatal:
+    """valid_from/valid_to are required to evaluate "is this active" —
+    but a single malformed record must not take down the whole batch:
+    it's logged and skipped, and every other, valid record is still
+    returned."""
 
-    def test_missing_valid_from_raises_value_error(self) -> None:
+    def test_missing_valid_from_is_skipped_with_warning(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         raw_item = _raw_sigmet()
         del raw_item["validTimeFrom"]
 
-        with pytest.raises(ValueError, match="missing a required validity timestamp"):
-            SigmetMapper().map([raw_item], fir_id="EPWW")
+        with caplog.at_level("WARNING"):
+            result = SigmetMapper().map([raw_item], fir_id="EPWW")
 
-    def test_missing_valid_to_raises_value_error(self) -> None:
+        assert result == []
+        assert "Skipping malformed SIGMET record" in caplog.text
+        assert "EPWW" in caplog.text
+
+    def test_missing_valid_to_is_skipped_with_warning(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         raw_item = _raw_sigmet()
         del raw_item["validTimeTo"]
 
-        with pytest.raises(ValueError, match="missing a required validity timestamp"):
-            SigmetMapper().map([raw_item], fir_id="EPWW")
+        with caplog.at_level("WARNING"):
+            result = SigmetMapper().map([raw_item], fir_id="EPWW")
+
+        assert result == []
+        assert "Skipping malformed SIGMET record" in caplog.text
+
+    def test_one_malformed_record_does_not_discard_the_others(self) -> None:
+        """The core requirement: 99 good records must survive 1 bad one."""
+        broken = _raw_sigmet(rawSigmet="BROKEN")
+        del broken["validTimeFrom"]
+        good = [_raw_sigmet(rawSigmet=f"GOOD-{i}") for i in range(5)]
+
+        result = SigmetMapper().map([broken, *good], fir_id="EPWW")
+
+        assert len(result) == 5
+        assert {sigmet.raw for sigmet in result} == {f"GOOD-{i}" for i in range(5)}
+
+    def test_structurally_invalid_item_is_skipped(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """An item that isn't even a well-formed dict (e.g. a bare
+        string) must be skipped, not crash the mapper."""
+        with caplog.at_level("WARNING"):
+            result = SigmetMapper().map(["not-a-dict"], fir_id="EPWW")
+
+        assert result == []
+        assert "Skipping malformed SIGMET record" in caplog.text
 
 
 class TestMissingOptionalFields:

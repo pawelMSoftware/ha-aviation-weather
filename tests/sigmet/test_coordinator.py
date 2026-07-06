@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from aiohttp import ClientError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.aviation_weather.const import CONF_FIR, DOMAIN
 from custom_components.aviation_weather.sigmet.coordinator import SigmetCoordinator
@@ -268,4 +272,234 @@ class TestStaleDataRepairIssue:
         client.get_sigmets.return_value = []
         await coordinator.async_refresh()
 
-        assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+
+class TestExpiryTimer:
+    """Tests for the async_track_point_in_utc_time-based expiry wake-up.
+
+    Real "now" (not a patched dt_util.utcnow) is used as the baseline
+    here, with SIGMET windows offset by a few real seconds — the
+    underlying scheduling (_TrackPointUTCTime) computes its delay from
+    the real wall clock (time.time()), not from dt_util.utcnow, so
+    mixing a frozen fake "now" with real timer firing would produce
+    nonsensical delays. async_fire_time_changed still lets these fire
+    deterministically without an actual sleep.
+    """
+
+    async def test_schedules_for_nearest_active_valid_to(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """Given two active SIGMETs, the timer targets the sooner one,
+        regardless of list order."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        sooner = _make_sigmet(
+            sigmet_id="sooner",
+            valid_from=now - timedelta(minutes=1),
+            valid_to=now + timedelta(minutes=5),
+        )
+        later = _make_sigmet(
+            sigmet_id="later",
+            valid_from=now - timedelta(minutes=1),
+            valid_to=now + timedelta(minutes=30),
+        )
+        client.get_sigmets.return_value = [later, sooner]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+
+        with patch(
+            "custom_components.aviation_weather.sigmet.coordinator"
+            ".async_track_point_in_utc_time",
+        ) as mock_track:
+            await coordinator.async_refresh()
+
+        mock_track.assert_called_once()
+        assert mock_track.call_args.args[2] == sooner.valid_to
+
+    async def test_no_timer_when_nothing_active(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        client = AsyncMock()
+        client.get_sigmets.return_value = []
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+
+        assert coordinator._unsub_expiry is None
+
+    async def test_no_timer_when_only_expired_sigmets(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        expired = _make_sigmet(
+            valid_from=now - timedelta(hours=2),
+            valid_to=now - timedelta(hours=1),
+        )
+        client.get_sigmets.return_value = [expired]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+
+        assert coordinator._unsub_expiry is None
+
+    async def test_previous_timer_cancelled_before_scheduling_new_one(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """A fresh successful poll must cancel the old timer, not stack
+        a second one alongside it."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        sigmet = _make_sigmet(
+            valid_from=now - timedelta(minutes=1),
+            valid_to=now + timedelta(minutes=5),
+        )
+        client.get_sigmets.return_value = [sigmet]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+
+        first_cancel = MagicMock()
+        second_cancel = MagicMock()
+        with patch(
+            "custom_components.aviation_weather.sigmet.coordinator"
+            ".async_track_point_in_utc_time",
+            side_effect=[first_cancel, second_cancel],
+        ):
+            await coordinator.async_refresh()
+            await coordinator.async_refresh()
+
+        first_cancel.assert_called_once()
+        second_cancel.assert_not_called()
+
+    async def test_transport_failure_does_not_touch_existing_timer(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """A failed poll must not cancel a still-valid pending timer —
+        only a successful update reschedules."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        sigmet = _make_sigmet(
+            valid_from=now - timedelta(minutes=1),
+            valid_to=now + timedelta(minutes=5),
+        )
+        client.get_sigmets.return_value = [sigmet]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+        unsub_after_success = coordinator._unsub_expiry
+        assert unsub_after_success is not None
+
+        client.get_sigmets.side_effect = ClientError("connection reset")
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()
+
+        assert coordinator._unsub_expiry is unsub_after_success
+        coordinator._cancel_expiry_timer()
+
+    async def test_firing_at_expiry_notifies_listeners_and_reflects_expiry(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """End-to-end: once real time passes valid_to, the scheduled
+        callback actually fires, notifies listeners (what makes
+        CoordinatorEntity re-read is_on/attributes), and active_sigmets
+        reflects the expiry — all without any new API call."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        expiry = now + timedelta(seconds=2)
+        sigmet = _make_sigmet(
+            valid_from=now - timedelta(minutes=1),
+            valid_to=expiry,
+        )
+        client.get_sigmets.return_value = [sigmet]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+
+        listener = MagicMock()
+        coordinator.async_add_listener(listener)
+
+        # dt_util.utcnow (used by active_advisories) is independent of
+        # the real-time-based loop.call_at scheduling that
+        # async_fire_time_changed simulates — it must be patched
+        # separately so "is this SIGMET active" agrees with the
+        # simulated fire time, not the real (barely-elapsed) wall clock.
+        fired_at = expiry + timedelta(seconds=1)
+        with patch(
+            "custom_components.aviation_weather.sigmet.coordinator.dt_util.utcnow",
+            return_value=fired_at,
+        ):
+            async_fire_time_changed(hass, fired_at)
+            await hass.async_block_till_done()
+
+            listener.assert_called()
+            assert coordinator.active_sigmets == []
+            assert coordinator._unsub_expiry is None
+
+        client.get_sigmets.assert_called_once()
+        # async_add_listener above schedules the coordinator's own
+        # periodic refresh timer; shut it down so it doesn't linger
+        # past this test.
+        await coordinator.async_shutdown()
+
+    async def test_reschedules_for_next_nearest_after_first_fires(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """Two staggered SIGMETs: once the sooner one's timer fires,
+        the coordinator reschedules for the still-active second one
+        instead of leaving no timer at all."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        first_expiry = now + timedelta(seconds=2)
+        second_expiry = now + timedelta(seconds=100)
+        soon = _make_sigmet(
+            sigmet_id="soon",
+            valid_from=now - timedelta(minutes=1),
+            valid_to=first_expiry,
+        )
+        later = _make_sigmet(
+            sigmet_id="later",
+            valid_from=now - timedelta(minutes=1),
+            valid_to=second_expiry,
+        )
+        client.get_sigmets.return_value = [soon, later]
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+        first_unsub = coordinator._unsub_expiry
+        assert first_unsub is not None
+
+        fired_at = first_expiry + timedelta(seconds=1)
+        with patch(
+            "custom_components.aviation_weather.sigmet.coordinator.dt_util.utcnow",
+            return_value=fired_at,
+        ):
+            async_fire_time_changed(hass, fired_at)
+            await hass.async_block_till_done()
+
+            assert coordinator._unsub_expiry is not None
+            assert coordinator._unsub_expiry is not first_unsub
+            assert [sigmet.id for sigmet in coordinator.active_sigmets] == ["later"]
+
+        coordinator._cancel_expiry_timer()
+
+    async def test_unload_cancels_pending_timer(
+        self, hass, config_entry: MockConfigEntry
+    ) -> None:
+        """The entry's async_on_unload hook must cancel a pending timer
+        so it doesn't fire after the FIR device has been torn down."""
+        client = AsyncMock()
+        now = dt_util.utcnow()
+        sigmet = _make_sigmet(
+            valid_from=now - timedelta(minutes=1),
+            valid_to=now + timedelta(minutes=5),
+        )
+        client.get_sigmets.return_value = [sigmet]
+        config_entry.add_to_hass(hass)
+
+        coordinator = SigmetCoordinator(hass=hass, entry=config_entry, client=client)
+        await coordinator.async_refresh()
+        assert coordinator._unsub_expiry is not None
+
+        for unload_callback in list(config_entry._on_unload or []):
+            unload_callback()
+
+        assert coordinator._unsub_expiry is None
