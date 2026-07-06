@@ -4,6 +4,9 @@ Thanks for considering a contribution to Aviation Weather. This document
 covers the practical steps; see [`CLAUDE.md`](CLAUDE.md) for a deeper
 architecture overview if you're making a non-trivial change.
 
+Participation in this project is governed by our
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Getting started
 
 ```bash
