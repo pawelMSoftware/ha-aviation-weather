@@ -49,8 +49,8 @@ def _raw_sigmet(fir_id: str = "EPWW") -> dict:
         "qualifier": "SEV",
         "base": "FL180",
         "top": "FL360",
-        "validTimeFrom": "2026-07-03T10:00:00Z",
-        "validTimeTo": "2026-07-03T14:00:00Z",
+        "validTimeFrom": 1783072800,
+        "validTimeTo": 1783087200,
         "coords": [],
         "rawSigmet": "WSPL31 EPWW 031000",
     }

@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   missing validity timestamp) no longer discards the entire batch for a
   FIR. It's now logged as a warning and skipped, while every other
   valid SIGMET in the same response is still processed normally.
+- Every SIGMET was silently being skipped as "malformed" because the
+  mapper parsed `validTimeFrom`/`validTimeTo` as ISO 8601 strings, but
+  the isigmet API actually returns them as Unix timestamps (matching
+  the TAF mapper's handling of the same field names). SIGMETs are now
+  mapped correctly again.
 
 ## [1.0.0] - 2026-07-06
 
