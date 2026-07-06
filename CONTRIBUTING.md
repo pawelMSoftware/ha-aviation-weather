@@ -33,6 +33,25 @@ across Python 3.12/3.13/3.14, and a job that regenerates the airport
 database from fresh source data and re-runs the suite against it. All of
 these should pass locally before you open a PR.
 
+### Checking HACS validation locally
+
+If you touch `manifest.json`, `hacs.json`, or anything else HACS
+validates, you can run the exact same check as
+`.github/workflows/hacs.yml` locally instead of waiting on CI:
+
+```bash
+./scripts/check_hacs.sh
+```
+
+Requires Docker and a GitHub token with read access to this repo (it
+reuses the one already stored by `git` in `~/.git-credentials` if you
+don't set `GITHUB_TOKEN` yourself). Note that a couple of checks
+(`hacsjson`, `integration_manifest`) fetch files via
+`raw.githubusercontent.com`, which only serves **public** repositories
+regardless of the token — if this repo is private, those two will fail
+here exactly as they do in CI, and there's nothing to fix in the files
+themselves.
+
 ## Making a change
 
 - **New field on an existing report** (METAR/TAF/SIGMET): touch all four
