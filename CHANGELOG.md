@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.1] - 2026-07-06
 
 ### Fixed
 
@@ -83,4 +83,5 @@ First release.
 - Config-entry title normalization (`ICAO — Name`) applies uniformly to
   both airport and FIR entries (schema migration v1.0 → v1.1).
 
+[1.0.1]: https://github.com/pawelMSoftware/ha-aviation-weather/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/pawelMSoftware/ha-aviation-weather/releases/tag/v1.0.0
