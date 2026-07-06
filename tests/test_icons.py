@@ -28,15 +28,29 @@ class TestIconsFileIsValid:
 class TestMetarSummaryIcons:
     """Every FlightCategory value must have a per-state icon, or the
     frontend falls back to the generic default icon instead of a
-    category-specific one."""
+    category-specific one.
+
+    icons.json state keys must be lowercase — hassfest's icon schema
+    requires `[a-z0-9-_]+` regardless of the entity's actual (uppercase)
+    state value; the frontend lowercases the state before looking it up
+    here, so `FlightCategory.VFR` ("VFR") still resolves against the
+    "vfr" key at runtime.
+    """
 
     def test_every_flight_category_has_an_icon(self) -> None:
         state_icons = _load_icons()["entity"]["sensor"]["metar_summary"]["state"]
 
         for category in FlightCategory:
-            assert category.value in state_icons, (
+            assert category.value.lower() in state_icons, (
                 f"FlightCategory {category.value!r} is missing an icon"
             )
+
+    def test_state_keys_are_lowercase(self) -> None:
+        """Regression guard for the hassfest schema requirement."""
+        state_icons = _load_icons()["entity"]["sensor"]["metar_summary"]["state"]
+
+        for key in state_icons:
+            assert key == key.lower(), f"icons.json state key {key!r} is not lowercase"
 
     def test_default_icon_is_set(self) -> None:
         icons = _load_icons()["entity"]["sensor"]["metar_summary"]

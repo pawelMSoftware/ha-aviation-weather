@@ -61,7 +61,13 @@ class TestTranslationFilesAreValid:
 class TestContinentTranslations:
     """Every continent the airport database uses must have a translated
     label in every translation file, or the frontend will fall back to
-    showing the raw, untranslated continent code."""
+    showing the raw, untranslated continent code.
+
+    The JSON keys are lowercase (e.g. "eu") even though continent_options()
+    returns uppercase codes (e.g. "EU") — hassfest's translation schema
+    requires lowercase keys, and the frontend lowercases the actual
+    selector value before looking up its label here.
+    """
 
     def test_every_continent_code_has_a_translated_label(
         self, translation_file: dict
@@ -71,9 +77,16 @@ class TestContinentTranslations:
         labels = translation_file["selector"]["continent"]["options"]
 
         for code in continent_options():
-            assert code in labels, (
+            assert code.lower() in labels, (
                 f"Continent code {code!r} is missing a translated label"
             )
+
+    def test_option_keys_are_lowercase(self, translation_file: dict) -> None:
+        """Regression guard for the hassfest schema requirement."""
+        labels = translation_file["selector"]["continent"]["options"]
+
+        for key in labels:
+            assert key == key.lower(), f"continent option key {key!r} is not lowercase"
 
     def test_no_translated_label_is_empty(self, translation_file: dict) -> None:
         """No continent label is an empty string (which would render as

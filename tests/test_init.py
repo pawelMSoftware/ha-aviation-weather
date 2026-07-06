@@ -11,6 +11,7 @@ from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.aviation_weather import (
+    CONFIG_SCHEMA,
     async_migrate_entry,
     async_setup_entry,
     async_unload_entry,
@@ -68,6 +69,27 @@ def _make_success_session() -> MagicMock:
     session = MagicMock()
     session.get = MagicMock(side_effect=get)
     return session
+
+
+class TestConfigSchema:
+    """This integration is config-entry only (no YAML configuration),
+    which hassfest requires CONFIG_SCHEMA to declare explicitly."""
+
+    def test_missing_domain_key_is_valid(self) -> None:
+        """No YAML config for this domain at all is fine."""
+        assert CONFIG_SCHEMA({}) == {}
+
+    def test_yaml_config_for_this_domain_logs_an_error(self, caplog) -> None:
+        """YAML config under the aviation_weather key doesn't raise
+        (config_entry_only_config_schema can't reject already-parsed
+        YAML), but logs an error telling the user to remove it — this
+        is the documented behavior of
+        cv.config_entry_only_config_schema, which also raises a
+        Repairs issue when running inside hass."""
+        result = CONFIG_SCHEMA({DOMAIN: {}})
+
+        assert result == {DOMAIN: {}}
+        assert "does not support YAML setup" in caplog.text
 
 
 class TestAsyncSetupEntry:

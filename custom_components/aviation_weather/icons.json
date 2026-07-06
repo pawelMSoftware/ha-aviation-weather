@@ -4,10 +4,10 @@
       "metar_summary": {
         "default": "mdi:weather-cloudy",
         "state": {
-          "VFR": "mdi:weather-sunny",
-          "MVFR": "mdi:weather-partly-cloudy",
-          "IFR": "mdi:weather-fog",
-          "LIFR": "mdi:weather-pouring"
+          "vfr": "mdi:weather-sunny",
+          "mvfr": "mdi:weather-partly-cloudy",
+          "ifr": "mdi:weather-fog",
+          "lifr": "mdi:weather-pouring"
         }
       }
     },
