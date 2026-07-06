@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the isigmet API actually returns them as Unix timestamps (matching
   the TAF mapper's handling of the same field names). SIGMETs are now
   mapped correctly again.
+- The continent step of "Add airport" showed a raw code (e.g. `EU`)
+  instead of a translated name, because the translation files used
+  lowercase option keys (`eu`) while the actual continent values are
+  uppercase (`EU`) — the frontend's selector-label lookup is exact and
+  case-sensitive, so the mismatch fell back to the raw code.
 
 ## [1.0.0] - 2026-07-06
 

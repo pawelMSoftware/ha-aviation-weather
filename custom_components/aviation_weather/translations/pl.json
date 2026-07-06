@@ -76,13 +76,13 @@
   "selector": {
     "continent": {
       "options": {
-        "af": "Afryka",
-        "an": "Antarktyda",
-        "as": "Azja",
-        "eu": "Europa",
-        "na": "Ameryka Północna",
-        "oc": "Oceania",
-        "sa": "Ameryka Południowa"
+        "AF": "Afryka",
+        "AN": "Antarktyda",
+        "AS": "Azja",
+        "EU": "Europa",
+        "NA": "Ameryka Północna",
+        "OC": "Oceania",
+        "SA": "Ameryka Południowa"
       }
     },
     "enabled_entities": {
