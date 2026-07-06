@@ -22,3 +22,4 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
+          github_token: ${{ secrets.GITHUB_TOKEN }}
