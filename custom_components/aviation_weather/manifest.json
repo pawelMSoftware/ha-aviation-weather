@@ -1,11 +1,11 @@
 {
   "domain": "aviation_weather",
   "name": "Aviation Weather",
-  "version": "1.0.0",
-  "documentation": "https://github.com/pawelMSoftware/ha-aviation-weather",
-  "issue_tracker": "https://github.com/pawelMSoftware/ha-aviation-weather/issues",
-  "requirements": [],
   "codeowners": ["@pawelMSoftware"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "documentation": "https://github.com/pawelMSoftware/ha-aviation-weather",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/pawelMSoftware/ha-aviation-weather/issues",
+  "requirements": [],
+  "version": "1.0.0"
 }

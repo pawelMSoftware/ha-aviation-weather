@@ -19,6 +19,16 @@ dev = [
     "traffic>=2.13",
 ]
 
+[tool.setuptools.packages.find]
+# Without this, setuptools' flat-layout auto-discovery finds both
+# custom_components/ and blueprints/ as top-level package candidates
+# and refuses to guess ("Multiple top-level packages discovered").
+# This is a Home Assistant custom integration, not a distributable
+# library — custom_components/ is the only thing that's ever meant to
+# be importable; blueprints/ and scripts/ are plain YAML/dev-tooling
+# directories, not Python packages to install.
+include = ["custom_components*"]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 88
