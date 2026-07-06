@@ -1,0 +1,60 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check the [existing issues](../issues) for a duplicate.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Include what you expected instead.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      description: Settings → Devices & Services → Aviation Weather → the version shown, or the release tag you installed via HACS.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.7.1"
+    validations:
+      required: true
+
+  - type: input
+    id: entities
+    attributes:
+      label: Affected airport(s) / FIR(s)
+      description: ICAO code(s), e.g. EPGD, EPWW
+    validations:
+      required: false
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics / logs
+      description: >
+        Attach a diagnostics download (Devices & Services → Aviation Weather → the
+        entry → ⋮ → Download diagnostics) if possible, or paste relevant log lines
+        (Settings → System → Logs, filtered to "aviation_weather").
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: false

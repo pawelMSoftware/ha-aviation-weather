@@ -1,0 +1,55 @@
+blueprint:
+  name: Aviation Weather — SPECI Report Alert
+  description: >
+    Notifies you when an airport issues an unscheduled SPECI report
+    instead of waiting for the next routine METAR (every 30 minutes).
+
+    Requires the airport's "METAR details" option to be enabled —
+    `metar_type` is part of that group.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/speci_alert.yaml
+  input:
+    metar_type_entity:
+      name: METAR Type sensor
+      description: The airport's `sensor.<icao>_metar_type` entity.
+      selector:
+        entity:
+          domain: sensor
+    metar_entity:
+      name: METAR sensor
+      description: The airport's main `sensor.<icao>_metar` entity (used for attributes in the notification).
+      selector:
+        entity:
+          domain: sensor
+    notify_target:
+      name: Notify target
+      description: >
+        The `notify` entity to send the alert to (e.g. your phone's
+        mobile_app notify entity). Find it under Settings → Devices &
+        Services → your device → Entities, or search "notify" in
+        Developer Tools → States.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  metar_entity: !input metar_entity
+
+trigger:
+  - trigger: state
+    entity_id: !input metar_type_entity
+    to: "SPECI"
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "⚠️ Rapid weather change"
+      message: >
+        SPECI issued at {{ now().strftime('%H:%M') }}.
+        Conditions: {{ states(metar_entity) }},
+        visibility {{ state_attr(metar_entity, 'visibility') }},
+        wind {{ state_attr(metar_entity, 'wind_speed') }} kt
+        {{ state_attr(metar_entity, 'wind_direction') }}°.
+        Raw: {{ state_attr(metar_entity, 'raw_metar') }}

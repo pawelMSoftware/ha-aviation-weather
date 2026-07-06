@@ -1,0 +1,33 @@
+blueprint:
+  name: Aviation Weather — SIGMET Cleared Alert
+  description: >
+    Notifies you when a FIR's active SIGMET(s) clear — the counterpart
+    to the "Active SIGMET Alert" blueprint.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/sigmet_cleared_alert.yaml
+  input:
+    sigmet_entity:
+      name: SIGMET binary sensor
+      description: The FIR's `binary_sensor.<fir>_sigmet` entity.
+      selector:
+        entity:
+          domain: binary_sensor
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+trigger:
+  - trigger: state
+    entity_id: !input sigmet_entity
+    to: "off"
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "✅ SIGMET cleared"
+      message: "No active SIGMET anymore."

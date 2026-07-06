@@ -1,0 +1,48 @@
+blueprint:
+  name: Aviation Weather — Specific SIGMET Hazard Alert
+  description: >
+    Notifies you only when a specific hazard (e.g. icing) is part of an
+    active SIGMET for a FIR, instead of alerting on every SIGMET.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/sigmet_hazard_alert.yaml
+  input:
+    sigmet_entity:
+      name: SIGMET binary sensor
+      description: The FIR's `binary_sensor.<fir>_sigmet` entity.
+      selector:
+        entity:
+          domain: binary_sensor
+    hazard_code:
+      name: Hazard code
+      description: >
+        The hazard code to watch for. Common codes: TS (thunderstorm),
+        TURB (turbulence), ICE (icing), VA (volcanic ash), MTW
+        (mountain wave), DS/SS (dust/sand storm).
+      default: ICE
+      selector:
+        text:
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  sigmet_entity: !input sigmet_entity
+  hazard_code: !input hazard_code
+
+trigger:
+  - trigger: template
+    value_template: >
+      {{ hazard_code in (state_attr(sigmet_entity, 'hazards') or []) }}
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "🧊 {{ hazard_code }} SIGMET"
+      message: >
+        {{ hazard_code }} SIGMET active.
+        Valid until {{ state_attr(sigmet_entity, 'valid_until') }}.

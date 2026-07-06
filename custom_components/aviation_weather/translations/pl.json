@@ -1,0 +1,119 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dodaj lotnisko",
+        "description": "Wybierz kontynent, z którego chcesz dodać lotnisko.",
+        "data": {
+          "continent": "Kontynent"
+        }
+      },
+      "country": {
+        "title": "Wybierz kraj",
+        "description": "Wybierz kraj, z którego chcesz dodać lotnisko.",
+        "data": {
+          "country": "Kraj"
+        }
+      },
+      "airport": {
+        "title": "Wybierz lotnisko",
+        "description": "Wybierz lotnisko, które chcesz monitorować.",
+        "data": {
+          "airport": "Lotnisko"
+        }
+      },
+      "related_objects": {
+        "title": "Powiązane obiekty",
+        "description": "Wykryto powiązaną Strefę Informacji Powietrznej (FIR) dla wybranego lotniska. Ostrzeżenia pogodowe SIGMET są wydawane dla całego FIR, nie dla pojedynczego lotniska.\n\nWykryto: **{fir_label}**",
+        "data": {
+          "add_fir": "Dodaj urządzenie FIR"
+        },
+        "data_description": {
+          "add_fir": "Tworzy osobne urządzenie dla FIR. Jeśli później dodasz kolejne lotniska z tego samego FIR, istniejące urządzenie zostanie ponownie wykorzystane."
+        }
+      }
+    },
+    "error": {
+      "airport_exists": "To lotnisko zostało już dodane."
+    },
+    "abort": {
+      "already_configured": "Ten wpis został już skonfigurowany.",
+      "reconfigure_successful": "Lotnisko zostało zaktualizowane."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ustawienia lotniska",
+        "description": "Wybierz dodatkowe encje, które chcesz włączyć, i dostosuj częstotliwość pobierania danych.",
+        "data": {
+          "enabled_entities": "Dodatkowe encje",
+          "metar_interval": "Interwał odświeżania METAR",
+          "taf_interval": "Interwał odświeżania TAF",
+          "add_fir": "Dodaj urządzenie FIR"
+        },
+        "data_description": {
+          "enabled_entities": "Główny sensor METAR (kategoria lotu, surowy raport) jest zawsze tworzony. Włącz dodatkowe sensory dla poszczególnych parametrów pogodowych lub sensor prognozy TAF.",
+          "metar_interval": "Co ile minut pobierać bieżące warunki pogodowe (METAR). Rutynowe raporty METAR są wydawane co 30 minut; 10 minut to dobry domyślny interwał dla szybszego wykrywania raportów SPECI.",
+          "taf_interval": "Co ile minut pobierać prognozę (TAF). Raporty TAF są wydawane co 6 godzin; 30 minut jest w zupełności wystarczające.",
+          "add_fir": "Tworzy urządzenie FIR dla **{fir_label}**. Ostrzeżenia SIGMET będą pojawiać się na tym urządzeniu. Jeśli później dodasz kolejne lotniska z tego samego FIR, urządzenie zostanie ponownie wykorzystane."
+        }
+      },
+      "fir_init": {
+        "title": "Ustawienia FIR",
+        "description": "Wybierz dodatkowe encje SIGMET, które chcesz włączyć, i dostosuj częstotliwość pobierania danych SIGMET dla **{fir_icao}**.",
+        "data": {
+          "enabled_entities": "Dodatkowe encje",
+          "sigmet_interval": "Interwał odświeżania SIGMET"
+        },
+        "data_description": {
+          "enabled_entities": "Główny sensor SIGMET (aktywny/nieaktywny, pełne szczegóły ostrzeżeń) jest zawsze tworzony. Włącz dodatkowe sensory dla liczby aktywnych SIGMET, zagrożeń i najpóźniejszego czasu ważności.",
+          "sigmet_interval": "Co ile minut pobierać dane SIGMET. Ostrzeżenia SIGMET są wydawane w miarę potrzeb, a nie według stałego harmonogramu; 15 minut to dobry domyślny interwał, by szybko wykrywać nowe lub zmienione ostrzeżenia."
+        }
+      }
+    }
+  },
+  "selector": {
+    "continent": {
+      "options": {
+        "AF": "Afryka",
+        "AN": "Antarktyda",
+        "AS": "Azja",
+        "EU": "Europa",
+        "NA": "Ameryka Północna",
+        "OC": "Oceania",
+        "SA": "Ameryka Południowa"
+      }
+    },
+    "enabled_entities": {
+      "options": {
+        "metar_sensors": "Szczegóły METAR",
+        "taf": "Prognoza TAF"
+      }
+    },
+    "fir_enabled_entities": {
+      "options": {
+        "sigmet_sensors": "Szczegóły SIGMET"
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "configured_airports": "Skonfigurowane lotniska",
+      "metar_coordinators": "Aktywne koordynatory METAR",
+      "taf_coordinators": "Aktywne koordynatory TAF",
+      "configured_firs": "Skonfigurowane FIR",
+      "sigmet_coordinators": "Aktywne koordynatory SIGMET"
+    }
+  },
+  "issues": {
+    "stale_metar": {
+      "title": "Dane METAR dla {airport} nie były aktualizowane od dłuższego czasu",
+      "description": "Aviation Weather nie może pobrać aktualnego raportu METAR dla **{airport}** od kilku godzin. Zwykle oznacza to problem z połącznością między Home Assistant a aviationweather.gov, albo że lotnisko przestało publikować raporty METAR.\n\nSprawdź **Ustawienia → System → Logi** (filtrując po \"aviation_weather\"), aby zobaczyć szczegóły. To zgłoszenie zniknie automatycznie, gdy dane znów zaczną napływać."
+    },
+    "stale_sigmet": {
+      "title": "Dane SIGMET dla {fir} nie były aktualizowane od dłuższego czasu",
+      "description": "Aviation Weather nie może pobrać danych SIGMET dla **{fir}** od kilku godzin — to coś innego niż brak aktywnych SIGMET, co jest normalne. Zwykle oznacza to problem z połącznością między Home Assistant a aviationweather.gov.\n\nSprawdź **Ustawienia → System → Logi** (filtrując po \"aviation_weather\"), aby zobaczyć szczegóły. To zgłoszenie zniknie automatycznie, gdy dane znów zaczną napływać."
+    }
+  }
+}

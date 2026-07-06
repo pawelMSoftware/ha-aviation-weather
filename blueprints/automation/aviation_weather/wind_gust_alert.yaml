@@ -1,0 +1,66 @@
+blueprint:
+  name: Aviation Weather — Strong Wind Gust Alert
+  description: >
+    Notifies you when wind gusts at an airport exceed a threshold you
+    choose (default 25 kt ≈ 46 km/h).
+
+    Requires the airport's "METAR details" option to be enabled —
+    `wind_gust`/`wind_speed`/`wind_direction` are part of that group.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/wind_gust_alert.yaml
+  input:
+    wind_gust_entity:
+      name: Wind Gust sensor
+      description: The airport's `sensor.<icao>_wind_gust` entity.
+      selector:
+        entity:
+          domain: sensor
+    wind_speed_entity:
+      name: Wind Speed sensor
+      description: The airport's `sensor.<icao>_wind_speed` entity (for the notification text).
+      selector:
+        entity:
+          domain: sensor
+    wind_direction_entity:
+      name: Wind Direction sensor
+      description: The airport's `sensor.<icao>_wind_direction` entity (for the notification text).
+      selector:
+        entity:
+          domain: sensor
+    threshold:
+      name: Gust threshold (kt)
+      description: Alert when gusts exceed this value, in knots.
+      default: 25
+      selector:
+        number:
+          min: 5
+          max: 100
+          step: 1
+          unit_of_measurement: kt
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  wind_speed_entity: !input wind_speed_entity
+  wind_direction_entity: !input wind_direction_entity
+
+trigger:
+  - trigger: numeric_state
+    entity_id: !input wind_gust_entity
+    above: !input threshold
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "💨 Strong gusts"
+      message: >
+        Wind gust {{ trigger.to_state.state }} kt
+        (wind {{ states(wind_speed_entity) }} kt
+        from {{ states(wind_direction_entity) }}°)
+        at {{ now().strftime('%H:%M') }}.

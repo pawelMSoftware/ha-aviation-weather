@@ -1,0 +1,119 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Airport",
+        "description": "Select the continent from which you want to add an airport.",
+        "data": {
+          "continent": "Continent"
+        }
+      },
+      "country": {
+        "title": "Select Country",
+        "description": "Select the country from which you want to add an airport.",
+        "data": {
+          "country": "Country"
+        }
+      },
+      "airport": {
+        "title": "Select Airport",
+        "description": "Select the airport you want to monitor.",
+        "data": {
+          "airport": "Airport"
+        }
+      },
+      "related_objects": {
+        "title": "Related Objects",
+        "description": "A related Flight Information Region (FIR) was detected for the selected airport. SIGMET weather warnings are issued per FIR, not per airport.\n\nDetected: **{fir_label}**",
+        "data": {
+          "add_fir": "Add FIR device"
+        },
+        "data_description": {
+          "add_fir": "Creates a separate device for the FIR. If you add more airports from the same FIR later, the existing device will be reused."
+        }
+      }
+    },
+    "error": {
+      "airport_exists": "This airport has already been added."
+    },
+    "abort": {
+      "already_configured": "This entry has already been configured.",
+      "reconfigure_successful": "Airport updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Airport Settings",
+        "description": "Select any additional entities you would like to enable, and adjust how often data is fetched.",
+        "data": {
+          "enabled_entities": "Additional entities",
+          "metar_interval": "METAR refresh interval",
+          "taf_interval": "TAF refresh interval",
+          "add_fir": "Add FIR device"
+        },
+        "data_description": {
+          "enabled_entities": "The primary METAR sensor (flight category, raw report) is always created. Enable additional sensors for individual weather parameters, or the TAF forecast sensor.",
+          "metar_interval": "How often to fetch current weather conditions (METAR). Routine METAR reports are issued every 30 minutes; 10 minutes is a good default to catch rapid SPECI updates.",
+          "taf_interval": "How often to fetch the forecast (TAF). TAF reports are issued every 6 hours; 30 minutes is more than sufficient.",
+          "add_fir": "Creates a FIR device for **{fir_label}**. SIGMET alerts will appear on this device. If you add more airports from the same FIR later, this device will be reused."
+        }
+      },
+      "fir_init": {
+        "title": "FIR Settings",
+        "description": "Select any additional SIGMET entities you would like to enable, and adjust how often SIGMET data is fetched for **{fir_icao}**.",
+        "data": {
+          "enabled_entities": "Additional entities",
+          "sigmet_interval": "SIGMET refresh interval"
+        },
+        "data_description": {
+          "enabled_entities": "The primary SIGMET sensor (active/inactive, full advisory details) is always created. Enable additional sensors for the active SIGMET count, hazards, and latest valid-until time.",
+          "sigmet_interval": "How often to fetch SIGMET data. SIGMETs are issued as needed rather than on a fixed schedule; 15 minutes is a good default to catch new or amended advisories promptly."
+        }
+      }
+    }
+  },
+  "selector": {
+    "continent": {
+      "options": {
+        "AF": "Africa",
+        "AN": "Antarctica",
+        "AS": "Asia",
+        "EU": "Europe",
+        "NA": "North America",
+        "OC": "Oceania",
+        "SA": "South America"
+      }
+    },
+    "enabled_entities": {
+      "options": {
+        "metar_sensors": "METAR details",
+        "taf": "TAF forecast"
+      }
+    },
+    "fir_enabled_entities": {
+      "options": {
+        "sigmet_sensors": "SIGMET details"
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "configured_airports": "Configured airports",
+      "metar_coordinators": "Active METAR coordinators",
+      "taf_coordinators": "Active TAF coordinators",
+      "configured_firs": "Configured FIRs",
+      "sigmet_coordinators": "Active SIGMET coordinators"
+    }
+  },
+  "issues": {
+    "stale_metar": {
+      "title": "METAR data for {airport} hasn't updated in a while",
+      "description": "Aviation Weather hasn't been able to fetch a current METAR report for **{airport}** for several hours. This usually means a connectivity problem between Home Assistant and aviationweather.gov, or that the airport has stopped publishing METAR reports.\n\nCheck **Settings → System → Logs** (filtered to \"aviation_weather\") for details. This issue clears automatically once data starts flowing again."
+    },
+    "stale_sigmet": {
+      "title": "SIGMET data for {fir} hasn't updated in a while",
+      "description": "Aviation Weather hasn't been able to fetch SIGMET data for **{fir}** for several hours — this is separate from simply having no active SIGMET, which is normal. This usually means a connectivity problem between Home Assistant and aviationweather.gov.\n\nCheck **Settings → System → Logs** (filtered to \"aviation_weather\") for details. This issue clears automatically once data starts flowing again."
+    }
+  }
+}

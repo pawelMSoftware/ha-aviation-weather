@@ -1,0 +1,55 @@
+blueprint:
+  name: Aviation Weather — Flight Category Alert
+  description: >
+    Notifies you when an airport's flight category changes to one of
+    the categories you pick (e.g. dropping below VFR). No optional
+    sensors needed — `sensor.<icao>_metar` always reports the current
+    flight category.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/flight_category_alert.yaml
+  input:
+    metar_entity:
+      name: METAR sensor
+      description: The airport's `sensor.<icao>_metar` entity.
+      selector:
+        entity:
+          domain: sensor
+    categories:
+      name: Categories to alert on
+      description: Notify when the flight category changes to any of these.
+      default:
+        - IFR
+        - LIFR
+      selector:
+        select:
+          options:
+            - VFR
+            - MVFR
+            - IFR
+            - LIFR
+          multiple: true
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  metar_entity: !input metar_entity
+
+trigger:
+  - trigger: state
+    entity_id: !input metar_entity
+    to: !input categories
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "🔴 {{ states(metar_entity) }} conditions"
+      message: >
+        Flight category dropped to {{ states(metar_entity) }}
+        at {{ now().strftime('%H:%M') }}.
+        Raw: {{ state_attr(metar_entity, 'raw_metar') }}

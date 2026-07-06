@@ -1,0 +1,59 @@
+# Raw source data downloaded by scripts/update_airports.py.
+# Regenerate with: python -m scripts.update_airports
+scripts/data/*.csv
+scripts/data/*.xml
+scripts/data/*.xml.gz
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Linting
+.ruff_cache/
+.mypy_cache/
+
+# Editors / OS
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# SFTP/FTP connection profiles can contain plaintext credentials —
+# never track these, regardless of the .vscode allowlist above.
+sftp.json
+
+# Python packaging artifacts
+dist/
+build/
+
+# Environment / local secrets
+.env
+.envrc
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Claude Code project instructions — local dev aid, not published.
+CLAUDE.md
+
+# uv-generated lockfile — not part of this project's documented workflow
+# (CI and CONTRIBUTING.md both use plain `pip install -e ".[dev]"`).
+# Safe to delete locally; `uv` will regenerate it if you ever use it.
+uv.lock

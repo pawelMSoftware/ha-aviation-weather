@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest an idea for this integration
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check the [roadmap in the README](../blob/main/README.md#roadmap)
+        and [existing issues](../issues) — your idea might already be planned or requested.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: What are you trying to do that you can't do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? (New sensor, new option, new automation trigger, etc.)
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

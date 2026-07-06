@@ -1,0 +1,56 @@
+blueprint:
+  name: Aviation Weather — Multiple Active SIGMETs Alert
+  description: >
+    Notifies you when more than one SIGMET is active for a FIR at the
+    same time.
+
+    Requires the FIR's "SIGMET details" option to be enabled —
+    `sigmet_count`/`sigmet_hazards` are part of that group.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/sigmet_count_alert.yaml
+  input:
+    sigmet_count_entity:
+      name: SIGMET Count sensor
+      description: The FIR's `sensor.<fir>_sigmet_count` entity.
+      selector:
+        entity:
+          domain: sensor
+    sigmet_hazards_entity:
+      name: SIGMET Hazards sensor
+      description: The FIR's `sensor.<fir>_sigmet_hazards` entity (for the notification text).
+      selector:
+        entity:
+          domain: sensor
+    threshold:
+      name: Count threshold
+      description: Alert when the active SIGMET count exceeds this value.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 20
+          step: 1
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  sigmet_hazards_entity: !input sigmet_hazards_entity
+
+trigger:
+  - trigger: numeric_state
+    entity_id: !input sigmet_count_entity
+    above: !input threshold
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "⚠️ Multiple SIGMETs active"
+      message: >
+        {{ trigger.to_state.state }} SIGMETs currently active:
+        {{ states(sigmet_hazards_entity) }}.

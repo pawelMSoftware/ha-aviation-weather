@@ -1,0 +1,40 @@
+blueprint:
+  name: Aviation Weather — Active SIGMET Alert
+  description: >
+    Notifies you when a FIR has at least one active SIGMET.
+    `binary_sensor.<fir>_sigmet` is always created — no options need to
+    be enabled.
+  domain: automation
+  source_url: https://github.com/pawelMSoftware/ha-aviation-weather/blob/main/blueprints/automation/aviation_weather/sigmet_active_alert.yaml
+  input:
+    sigmet_entity:
+      name: SIGMET binary sensor
+      description: The FIR's `binary_sensor.<fir>_sigmet` entity.
+      selector:
+        entity:
+          domain: binary_sensor
+    notify_target:
+      name: Notify target
+      description: The `notify` entity to send the alert to.
+      selector:
+        entity:
+          domain: notify
+
+variables:
+  sigmet_entity: !input sigmet_entity
+
+trigger:
+  - trigger: state
+    entity_id: !input sigmet_entity
+    to: "on"
+
+action:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_target
+    data:
+      title: "⚠️ Active SIGMET"
+      message: >
+        {{ state_attr(sigmet_entity, 'active_count') }}
+        active SIGMET(s): {{ state_attr(sigmet_entity, 'hazards') | join(', ') }}.
+        Valid until {{ state_attr(sigmet_entity, 'valid_until') }}.

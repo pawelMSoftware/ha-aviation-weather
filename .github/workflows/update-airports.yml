@@ -1,0 +1,95 @@
+name: Update airport database
+
+# Manual trigger only — visible as a "Run workflow" button to anyone with
+# write access to this repo. Never runs automatically, never pushes
+# directly to main: it always opens a PR for review.
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you refreshing the airport database? (shown in the PR description)"
+        required: false
+        default: "Routine refresh of OurAirports / aviationweather.gov data"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-airports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Download latest source data
+        run: python -m scripts.update_airports
+
+      - name: Validate downloaded data
+        run: python -m scripts.validate_airports
+
+      - name: Generate airport database
+        run: python -m scripts.generate_airports
+
+      - name: Run test suite against the regenerated data
+        run: pytest
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet -- custom_components/aviation_weather/airports; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summarize changes
+        if: steps.changes.outputs.changed == 'true'
+        id: summary
+        run: |
+          {
+            echo "## Airport database update"
+            echo ""
+            echo "${{ github.event.inputs.reason }}"
+            echo ""
+            echo "### File changes"
+            echo '```'
+            git diff --stat -- custom_components/aviation_weather/airports
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open pull request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: "chore: refresh airport database"
+          title: "chore: refresh airport database"
+          body: |
+            Automated refresh of the airport database from OurAirports and
+            aviationweather.gov, triggered manually via workflow_dispatch.
+
+            **Reason given:** ${{ github.event.inputs.reason }}
+
+            Source data was re-downloaded, validated, and regenerated.
+            The full test suite passed against the regenerated data.
+
+            Please review the diff under `custom_components/aviation_weather/airports/`
+            before merging — check for unexpectedly large changes in airport
+            or country counts.
+          branch: chore/update-airport-database
+          delete-branch: true
+          labels: |
+            data-update
+            automated
+
+      - name: No changes detected
+        if: steps.changes.outputs.changed == 'false'
+        run: echo "Airport database is already up to date — no PR opened."
