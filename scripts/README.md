@@ -22,7 +22,8 @@ python -m scripts.generate_airports
 ```
 
 Run from the repository root with dev dependencies installed
-(`pip install -e ".[dev]"`).
+(`pip install -e ".[dev]" --config-settings editable_mode=compat` —
+see `CONTRIBUTING.md` for why the flag is required).
 
 After running, review the diff under `custom_components/aviation_weather/airports/`
 before committing. Large changes in airport or country counts are worth a

@@ -28,7 +28,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev]" --config-settings editable_mode=compat
 
       - name: Download latest source data
         run: python -m scripts.update_airports

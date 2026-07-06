@@ -9,12 +9,20 @@ architecture overview if you're making a non-trivial change.
 ```bash
 git clone <your fork>
 cd aviation_weather
-pip install -e ".[dev]"
+pip install -e ".[dev]" --config-settings editable_mode=compat
 ```
 
 This installs the integration in editable mode plus dev dependencies
 (`ruff`, `pytest`, `pytest-homeassistant-custom-component`, and the
 airport-database generator's dependencies).
+
+The `--config-settings editable_mode=compat` flag is required, not
+optional: modern setuptools' default (PEP 660) editable install adds a
+synthetic import-hook entry to `sys.path` instead of a real directory,
+which crashes Home Assistant's `custom_components` auto-discovery
+(`homeassistant/loader.py`) with a `FileNotFoundError` mentioning
+`__editable__...finder.__path_hook__` — `compat` mode falls back to the
+older, plain-directory-on-`sys.path` behavior HA's loader expects.
 
 ## Running tests and lint
 
