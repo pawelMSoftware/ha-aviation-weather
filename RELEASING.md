@@ -37,20 +37,12 @@ single change: bumping the version number.
    versioning](https://semver.org/): `MAJOR.MINOR.PATCH` — patch for
    bug fixes, minor for new features, major for breaking changes.
 
-   In the same commit, update [`CHANGELOG.md`](CHANGELOG.md):
-   - **Before the first real release** (currently the case — nothing
-     has been tagged yet): keep adding new entries directly under the
-     current top heading (`## [1.0.0] - YYYY-MM-DD`, date-bumped to the
-     day you actually release), rather than accumulating them in a
-     separate `[Unreleased]` section. There's no released `1.0.0` to
-     diff against yet, so there's nothing for `[Unreleased]` to usefully
-     mean.
-   - **After that first release exists**, switch to the normal
-     Keep a Changelog flow: accumulate new changes under
-     `## [Unreleased]` as you make them, then on the next release move
-     that section's entries under a new `## [0.2.0] - YYYY-MM-DD`
-     heading and add the corresponding compare/tag link at the bottom
-     of the file.
+   In the same commit, update [`CHANGELOG.md`](CHANGELOG.md) following
+   the normal Keep a Changelog flow: accumulate new changes under
+   `## [Unreleased]` as you make them, then on the next release move
+   that section's entries under a new `## [0.2.0] - YYYY-MM-DD`
+   heading and add the corresponding compare/tag link at the bottom
+   of the file.
 3. Merge to `main`.
 4. The Release workflow runs automatically. Check the **Actions** tab
    — within a minute or two you should see a new tag and release under
