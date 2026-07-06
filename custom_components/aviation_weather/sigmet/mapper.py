@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from .models import Sigmet
 
@@ -76,8 +76,8 @@ class SigmetMapper:
         hazard = item.get("hazard")
         raw = item.get("rawSigmet", "")
 
-        valid_from = self._from_iso_datetime(item.get("validTimeFrom"))
-        valid_to = self._from_iso_datetime(item.get("validTimeTo"))
+        valid_from = self._from_unix_timestamp(item.get("validTimeFrom"))
+        valid_to = self._from_unix_timestamp(item.get("validTimeTo"))
 
         advisory_id = item.get("id") or self._generate_id(
             fir_id=fir_id,
@@ -131,11 +131,11 @@ class SigmetMapper:
 
         return hashlib.sha256(fingerprint.encode()).hexdigest()[:16]
 
-    def _from_iso_datetime(
+    def _from_unix_timestamp(
         self,
-        value: str | None,
+        value: int | None,
     ) -> datetime:
-        """Convert ISO datetime.
+        """Convert a Unix timestamp (seconds), as returned by the isigmet API.
 
         SIGMET validity timestamps are required fields — a SIGMET
         without a validity window can't be evaluated for "is this
@@ -145,4 +145,4 @@ class SigmetMapper:
         if value is None:
             raise ValueError("SIGMET item is missing a required validity timestamp")
 
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromtimestamp(value, tz=UTC)

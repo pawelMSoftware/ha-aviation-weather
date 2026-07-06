@@ -18,8 +18,8 @@ def _raw_sigmet(**overrides: object) -> dict:
         "qualifier": "SEV",
         "base": "FL180",
         "top": "FL360",
-        "validTimeFrom": "2026-07-03T10:00:00Z",
-        "validTimeTo": "2026-07-03T14:00:00Z",
+        "validTimeFrom": 1783072800,
+        "validTimeTo": 1783087200,
         "coords": [{"lat": 52.1, "lon": 20.9}],
         "rawSigmet": "WSPL31 EPWW 031000",
     }
@@ -94,8 +94,8 @@ class TestExpiredSigmet:
     def test_expired_sigmet_is_still_mapped(self) -> None:
         raw = [
             _raw_sigmet(
-                validTimeFrom="2020-01-01T00:00:00Z",
-                validTimeTo="2020-01-01T04:00:00Z",
+                validTimeFrom=1577836800,
+                validTimeTo=1577851200,
             ),
         ]
 
@@ -154,6 +154,21 @@ class TestMalformedRecordIsSkippedNotFatal:
         string) must be skipped, not crash the mapper."""
         with caplog.at_level("WARNING"):
             result = SigmetMapper().map(["not-a-dict"], fir_id="EPWW")
+
+        assert result == []
+        assert "Skipping malformed SIGMET record" in caplog.text
+
+    def test_non_numeric_valid_from_is_skipped_with_warning(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Regression test: the real isigmet API returns validTimeFrom/
+        validTimeTo as Unix timestamps (int), not ISO 8601 strings. A
+        value of the wrong type must be skipped like any other
+        malformed record, not raise uncaught out of the mapper."""
+        raw_item = _raw_sigmet(validTimeFrom="2026-07-03T10:00:00Z")
+
+        with caplog.at_level("WARNING"):
+            result = SigmetMapper().map([raw_item], fir_id="EPWW")
 
         assert result == []
         assert "Skipping malformed SIGMET record" in caplog.text
