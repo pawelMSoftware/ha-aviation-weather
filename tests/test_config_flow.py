@@ -147,7 +147,7 @@ class TestChangingCountryClearsAirportSuggestion:
         # since "Germany" is also in Europe.
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         assert result["step_id"] == "country"
@@ -189,7 +189,7 @@ class TestChangingContinentClearsCountrySuggestion:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -273,12 +273,12 @@ class TestSelectingNonDefaultContinentClearsSuggestions:
 
             continent_field = next(iter(result["data_schema"].schema))
             default_continent = continent_field.default()
-            assert default_continent == "EU"
+            assert default_continent == "eu"
 
             # Deliberately pick the non-default continent.
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {"continent": "OC"},
+                {"continent": "oc"},
             )
 
             assert result["type"] is FlowResultType.FORM
@@ -321,7 +321,7 @@ class TestContinentSelectorTranslation:
         assert continent_validator.config["translation_key"] == "continent"
 
     async def test_continent_selector_options_are_plain_codes(self, hass) -> None:
-        """The selector's options are plain continent codes (e.g. "EU"),
+        """The selector's options are plain continent codes (e.g. "eu"),
         not pre-translated English names — translation happens on the
         frontend via translation_key."""
         result = await hass.config_entries.flow.async_init(
@@ -332,7 +332,7 @@ class TestContinentSelectorTranslation:
         continent_validator = next(iter(result["data_schema"].schema.values()))
         options = continent_validator.config["options"]
 
-        assert "EU" in options
+        assert "eu" in options
         assert "Europe" not in options
 
 
@@ -349,7 +349,7 @@ class TestCountrySelectorSearchability:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         assert result["step_id"] == "country"
@@ -366,7 +366,7 @@ class TestCountrySelectorSearchability:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         country_validator = next(iter(result["data_schema"].schema.values()))
@@ -388,7 +388,7 @@ class TestCountrySelectorSearchability:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         country_validator = next(iter(result["data_schema"].schema.values()))
@@ -413,7 +413,7 @@ class TestCountrySelectorSearchability:
 
         # Should not raise; the suggested continent is still EU.
         continent_field = next(iter(result["data_schema"].schema))
-        assert continent_field.default() == "EU"
+        assert continent_field.default() == "eu"
 
     async def test_user_in_kosovo_gets_no_suggested_country_default(self, hass) -> None:
         """When the nearest airport's country (XK) isn't supported by
@@ -428,7 +428,7 @@ class TestCountrySelectorSearchability:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -451,7 +451,7 @@ class TestDuplicateAirportRejected:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -471,7 +471,7 @@ class TestDuplicateAirportRejected:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -515,17 +515,17 @@ class TestDuplicateAirportRejected:
 
         # First entry: EPWA (Poland). This one will NOT match the
         # duplicate check below, forcing the loop past it.
-        first = await _configure_airport("EU", "PL", "EPWA")
+        first = await _configure_airport("eu", "PL", "EPWA")
         assert first["type"] is FlowResultType.CREATE_ENTRY
 
         # Second entry: EPGD (also Poland, different airport).
-        second = await _configure_airport("EU", "PL", "EPGD")
+        second = await _configure_airport("eu", "PL", "EPGD")
         assert second["type"] is FlowResultType.CREATE_ENTRY
 
         # Attempt to add EPGD again: the duplicate check must scan past
         # the EPWA entry (no match) before reaching the EPGD entry
         # (match) and rejecting it.
-        duplicate = await _configure_airport("EU", "PL", "EPGD")
+        duplicate = await _configure_airport("eu", "PL", "EPGD")
 
         assert duplicate["type"] is FlowResultType.FORM
         assert duplicate["step_id"] == "airport"
@@ -562,7 +562,7 @@ class TestRelatedObjectsStep:
         """Accepting the default (add_fir=True) for an airport whose FIR
         isn't configured yet creates a second, FIR config entry."""
         result = await _configure_airport_flow(
-            hass, continent="EU", country="PL", airport="EPWA"
+            hass, continent="eu", country="PL", airport="EPWA"
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -598,7 +598,7 @@ class TestRelatedObjectsStep:
         fir_entry.add_to_hass(hass)
 
         result = await _configure_airport_flow(
-            hass, continent="EU", country="PL", airport="EPWA"
+            hass, continent="eu", country="PL", airport="EPWA"
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -786,7 +786,7 @@ class TestOptionsFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -826,7 +826,7 @@ class TestOptionsFlow:
             context={"source": "user"},
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"continent": "EU"}
+            result["flow_id"], {"continent": "eu"}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"country": "PL"}
@@ -946,7 +946,7 @@ class TestOptionsFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -985,7 +985,7 @@ class TestOptionsFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1022,7 +1022,7 @@ class TestOptionsFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1060,7 +1060,7 @@ class TestOptionsFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"continent": "EU"},
+            {"continent": "eu"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1095,7 +1095,7 @@ class TestAirportOptionsFlowFirCheckbox:
         offers the add_fir checkbox; checking it creates a FIR entry,
         same as accepting the default at the related_objects step."""
         result = await _configure_airport_flow(
-            hass, continent="EU", country="PL", airport="EPWA"
+            hass, continent="eu", country="PL", airport="EPWA"
         )
         assert result["step_id"] == "related_objects"
 
@@ -1139,7 +1139,7 @@ class TestAirportOptionsFlowFirCheckbox:
         """Once the FIR is configured, the options form no longer offers
         the checkbox, and no fir_label placeholder is set."""
         result = await _configure_airport_flow(
-            hass, continent="EU", country="PL", airport="EPWA"
+            hass, continent="eu", country="PL", airport="EPWA"
         )
         assert result["step_id"] == "related_objects"
 

@@ -63,10 +63,16 @@ class TestContinentTranslations:
     label in every translation file, or the frontend will fall back to
     showing the raw, untranslated continent code.
 
-    The JSON keys are lowercase (e.g. "eu") even though continent_options()
-    returns uppercase codes (e.g. "EU") — hassfest's translation schema
-    requires lowercase keys, and the frontend lowercases the actual
-    selector value before looking up its label here.
+    hassfest requires translation keys to match [a-z0-9-_]+ (lowercase),
+    but continent_options()/CONTINENTS use uppercase codes (e.g. "EU",
+    matching pycountry_convert's convention). The frontend's
+    translation_key lookup is an exact, case-sensitive match against
+    the *submitted* option value — so config_flow.py's
+    build_continent_schema lowercases the options/default it passes to
+    the SelectSelector (and async_step_user uppercases the answer back)
+    to bridge the two conventions. These tests guard the JSON side of
+    that bridge: keys must stay lowercase, and every continent code
+    must have one (case-insensitively).
     """
 
     def test_every_continent_code_has_a_translated_label(
