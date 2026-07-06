@@ -1,6 +1,6 @@
 [project]
 name = "aviation_weather"
-version = "1.0.0"
+version = "1.0.1"
 description = "Home Assistant Aviation Weather integration"
 requires-python = ">=3.12"
 
