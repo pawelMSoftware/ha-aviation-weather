@@ -139,16 +139,25 @@ def build_continent_schema(
     labels (e.g. "Europe" / "Europa") are resolved from this
     integration's translation files, in the user's configured language,
     instead of a hardcoded English name.
+
+    continent_options()/CONTINENTS use uppercase codes (e.g. "EU",
+    matching pycountry_convert's convention used throughout the airport
+    generator pipeline), but hassfest requires translation keys to be
+    lowercase — and the frontend's translation_key lookup is an exact,
+    case-sensitive match against the option value. So the options and
+    default passed to the selector are lowercased here; async_step_user
+    uppercases the submitted value back before storing it, keeping
+    "EU" as the one canonical form everywhere else in the flow.
     """
 
     return vol.Schema(
         {
             vol.Required(
                 CONF_CONTINENT,
-                default=defaults[CONF_CONTINENT],
+                default=defaults[CONF_CONTINENT].lower(),
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=continent_options(),
+                    options=[code.lower() for code in continent_options()],
                     translation_key="continent",
                     sort=True,
                 ),
@@ -410,7 +419,7 @@ class AviationWeatherConfigFlow(
         )
 
         if user_input is not None:
-            self._continent = user_input[CONF_CONTINENT]
+            self._continent = user_input[CONF_CONTINENT].upper()
 
             if self._continent == defaults[CONF_CONTINENT]:
                 self._suggested_country = defaults[CONF_COUNTRY]
